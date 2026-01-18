@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Health Plan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- 1. VARIABLES & RESET --- */
+        :root { 
+            --primary: #16a085; 
+            --accent: #1abc9c; 
+            --bg: #f0fdfa; 
+            --dark: #2c3e50; 
+            --border: #e2e8f0; 
+            --danger: #e74c3c;
+            --danger-bg: #fff5f5;
+        }
+        
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg); 
+            color: var(--dark); 
+            margin: 0; 
+            padding: 20px; 
+            top: 0 !important; 
+        }
+
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding-bottom: 100px; 
+        }
+
+        /* --- 2. GOOGLE TRANSLATE --- */
+        .lang-container { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+        .goog-te-banner-frame { display: none !important; }
+        .goog-te-gadget-simple {
+            background-color: white !important;
+            border: 1px solid var(--primary) !important;
+            padding: 5px 15px !important;
+            border-radius: 20px !important;
+            font-family: 'Poppins', sans-serif !important;
+            font-size: 13px !important;
+        }
+
+        /* --- 3. UI COMPONENTS (Buttons & Cards) --- */
+        .pref-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+        
+        .pref-btn {
+            border: 2px solid #ddd; background: white; padding: 10px 20px; 
+            border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 14px;
+            display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .pref-btn.active { border-color: var(--primary); background: #e0f2f1; color: var(--primary); }
+
+        .card {
+            background: white; padding: 25px; border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;
+            position: relative;
+        }
+        .diagnosis-card { border-left: 6px solid var(--primary); }
+        .critical-card { border-left: 6px solid var(--danger); background: var(--danger-bg); }
+
+        .section-title { 
+            font-size: 18px; font-weight: 600; margin: 30px 0 15px 0; 
+            display: flex; align-items: center; gap: 8px; 
+        }
+
+        /* --- 4. CONTENT STYLING --- */
+        .condition-text { font-size: 24px; font-weight: 700; color: var(--primary); margin: 5px 0; }
+        .hindi-subtext { font-size: 16px; font-style: italic; color: #7f8c8d; }
+        
+        .diet-content h3 { color: var(--primary); border-bottom: 1px dashed #ccc; padding-bottom: 10px; margin-top: 0; }
+        .diet-content ul { padding-left: 20px; line-height: 1.8; color: #555; }
+        .diet-content b { color: var(--dark); }
+
+        /* --- 5. GRID & UTILITIES --- */
+        .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .tip-card {
+            background: #fff; padding: 15px; border-radius: 12px;
+            border-top: 4px solid var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            font-size: 13px; color: #555; line-height: 1.5;
+        }
+
+        .loader { text-align: center; color: #95a5a6; padding: 40px; font-style: italic; }
+        
+        .refresh-btn {
+            position: absolute; top: 20px; right: 20px;
+            background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px;
+            cursor: pointer; font-size: 12px; color: #555; display: flex; align-items: center; gap: 5px;
+            transition: 0.2s; font-weight: 600;
+        }
+
+        /* --- 6. NAVIGATION & FLOATING --- */
+        .controls {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--dark); padding: 12px 25px; border-radius: 40px;
+            display: flex; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 100;
+        }
+        .ctrl-btn {
+            background: none; border: none; color: white; cursor: pointer;
+            font-size: 16px; display: flex; align-items: center; gap: 8px; font-weight: 500;
+        }
+
+        .doc-float-btn {
+            position: fixed; bottom: 20px; left: 20px;
+            background: white; color: var(--primary); border: 2px solid var(--primary);
+            padding: 12px 20px; border-radius: 50px; font-weight: 600;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); cursor: pointer;
+            display: flex; align-items: center; gap: 10px; transition: 0.3s; z-index: 1000;
+        }
+        .doc-float-btn:hover { background: var(--primary); color: white; transform: translateY(-3px); }
+
+        /* --- ICONS --- */
+        .veg-icon, .nonveg-icon { width: 15px; height: 15px; border: 2px solid green; display: flex; align-items: center; justify-content: center; }
+        .veg-dot { width: 8px; height: 8px; background: green; border-radius: 50%; }
+        .nonveg-icon { border-color: brown; }
+        .nonveg-dot { width: 8px; height: 8px; background: brown; border-radius: 50%; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="lang-container">
+        <div id="google_translate_element"></div>
+    </div>
+
+    <div class="pref-container">
+        <div class="pref-btn active" id="btnVeg" onclick="setPref('Vegetarian')">
+            <div class="veg-icon"><div class="veg-dot"></div></div> Veg
+        </div>
+        <div class="pref-btn" id="btnNonVeg" onclick="setPref('Non-Vegetarian')">
+            <div class="nonveg-icon"><div class="nonveg-dot"></div></div> Non-Veg
+        </div>
+    </div>
+
+    <div class="card diagnosis-card">
+        <div style="font-size:12px; font-weight:700; color:#bdc3c7; text-transform:uppercase;">Analysis Result</div>
+        <div class="condition-text" id="condition">...</div>
+        <div class="hindi-subtext" id="summaryHindi">Select diet type to analyze...</div>
+    </div>
+
+    <div class="section-title" style="color: var(--danger);">⚠️ Critical: What to Avoid</div>
+    <div class="card critical-card">
+        <div id="avoidContent" class="diet-content">
+            <h3 style="color: #c0392b;">Immediate Contraindications</h3>
+            <ul id="avoidList">
+                <li><b>High-Sodium Foods:</b> Avoid papads, pickles, and processed snacks.</li>
+                <li><b>Hidden Sugars:</b> Steer clear of "sugar-free" biscuits containing Maida.</li>
+                <li><b>Sedentary Spells:</b> Do not remain seated for more than 45 minutes.</li>
+            </ul>
+            <p style="font-size: 11px; color: #666; margin-top: 15px; border-top: 1px solid #ffc1c1; padding-top: 10px;">
+                <i>*Automated scan results. Avoid self-medicating without "Ask Doc" verification.</i>
+            </p>
+        </div>
+    </div>
+
+    <div class="section-title">💡 DocEx's Advice</div>
+    <div id="tipsGrid" class="tips-grid"></div>
+
+    <div class="section-title">🥗 Daily Meal Plan</div>
+    <div class="card">
+        <button class="refresh-btn" onclick="fetchPlan()">🔄 New Plan</button>
+        <div id="dietResult" class="diet-content">
+            <div class="loader">Loading your personalized chart...</div>
+        </div>
+    </div>
+</div>
+
+<button class="doc-float-btn" onclick="askDoctor()">👨‍⚕️ Ask Doc</button>
+
+<div class="controls">
+    <button class="ctrl-btn" onclick="readAll()">🔊 Listen</button>
+    <button class="ctrl-btn" onclick="window.speechSynthesis.cancel()">⏹ Stop</button>
+    <button class="ctrl-btn" onclick="window.history.back()">↩ Back</button>
+</div>
+
+<script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'hi,mr,bn,ta,te,gu,kn,ml,en',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+<script>
+    const id = new URLSearchParams(location.search).get("id");
+    let currentPref = 'Vegetarian';
+    
+    window.onload = () => fetchPlan();
+
+    function setPref(type) {
+        currentPref = type;
+        document.getElementById('btnVeg').classList.toggle('active', type === 'Vegetarian');
+        document.getElementById('btnNonVeg').classList.toggle('active', type === 'Non-Vegetarian');
+        fetchPlan();
+    }
+
+    function fetchPlan() {
+        const dietResult = document.getElementById("dietResult");
+        const tipsGrid = document.getElementById("tipsGrid");
+        
+        dietResult.innerHTML = `<div class="loader">🍛 Preparing fresh ${currentPref} plan...</div>`;
+        tipsGrid.style.opacity = "0.5";
+
+        fetch(`../api/diet.php?id=${id}&type=${currentPref}&t=${Date.now()}`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById("condition").innerText = data.condition || "Health Report";
+                document.getElementById("summaryHindi").innerText = data.summary_hindi || "";
+                dietResult.innerHTML = data.diet_html || "<p>Error generating.</p>";
+                
+                tipsGrid.style.opacity = "1";
+                tipsGrid.innerHTML = "";
+                
+                if(data.tips) {
+                    const icons = ["🧘", "💧", "🥗", "🚶", "🍎"];
+                    data.tips.forEach((tip, i) => {
+                        tipsGrid.innerHTML += `
+                            <div class="tip-card">
+                                <div style="font-size:20px; margin-bottom:5px;">${icons[i % icons.length]}</div>
+                                ${tip}
+                            </div>`;
+                    });
+                }
+
+                const avoidList = document.getElementById("avoidList");
+                if(data.avoid_items) {
+                    avoidList.innerHTML = data.avoid_items.map(item => `<li>${item}</li>`).join('');
+                } else {
+                    avoidList.innerHTML = "<li><b>Refined Oils:</b> Switch to cold-pressed options.</li><li><b>Late Night Meals:</b> Avoid eating after 8:30 PM.</li>";
+                }
+            })
+            .catch(e => {
+                dietResult.innerHTML = "<p style='color:red; text-align:center;'>⚠️ Connection Failed.</p>";
+            });
+    }
+
+    function readAll() {
+        const text = document.getElementById("dietResult").innerText;
+        window.speechSynthesis.cancel();
+        const ut = new SpeechSynthesisUtterance(`Here is your Indian ${currentPref} diet plan. ${text}`);
+        ut.lang = 'hi-IN';
+        window.speechSynthesis.speak(ut);
+    }
+
+    function askDoctor() {
+        const btn = document.querySelector('.doc-float-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "⏳ Sending...";
+
+        fetch('../api/request_review.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data.success) {
+                alert("✅ Request sent! The doctor has been notified.");
+                btn.innerHTML = "✔️ Sent";
+                btn.style.background = "#2ecc71";
+                btn.style.color = "white";
+                btn.disabled = true;
+            } else {
+                alert("❌ Server Error: " + data.error);
+                btn.innerHTML = originalText;
+            }
+        })
+        .catch(err => {
+            alert("❌ Network Error.");
+            btn.innerHTML = originalText;
+        });
+    }
+</script>
+
+</body>
+</html>

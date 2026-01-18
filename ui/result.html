@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocEx | Medical Analysis Result</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root { 
+            --bs-primary: #16a085; 
+            --bs-primary-rgb: 22, 160, 133;
+            --bs-body-bg: #f8fafb; 
+            --bs-body-color: #2c3e50;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bs-body-bg);
+            padding-top: 85px;
+        }
+
+        .navbar {
+            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .card-custom {
+            border: none;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            background: #ffffff;
+            transition: transform 0.3s ease;
+        }
+
+        /* Analysis Display Area */
+        #result {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: #374151;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 18px;
+            border: 1px solid #edf2f7;
+            height: 450px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        /* Chat System */
+        #chat-box {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .msg { 
+            padding: 12px 18px; 
+            border-radius: 18px; 
+            font-size: 0.9rem; 
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .bot-msg { align-self: flex-start; background: white; color: #1e293b; border-bottom-left-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+        .user-msg { align-self: flex-end; background: var(--bs-primary); color: white; border-bottom-right-radius: 4px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .audio-player-container {
+            background: #f8fafc;
+            border-radius: 100px;
+            padding: 10px 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .audio-btn-circle {
+            width: 35px; height: 35px;
+            border-radius: 50%;
+            border: none;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            margin: 0 2px;
+            transition: 0.2s;
+        }
+
+        .chat-input-group {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 50px;
+            padding: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .mic-btn.listening { 
+            background: #ef4444 !important; 
+            color: white !important;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="upload.html">
+                <span class="me-2 text-primary"><i class="bi bi-heart-pulse-fill"></i></span>
+                <span>DocEx Explain</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <div id="google_translate_element"></div>
+                <a href="upload.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">New Scan</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row g-4">
+            
+            <div class="col-lg-7">
+                <div class="card card-custom p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold m-0"><i class="bi bi-file-earmark-medical me-2 text-primary"></i>Medical Analysis</h5>
+                        <span class="badge bg-light text-dark border">Report ID: <span id="display-id">---</span></span>
+                    </div>
+
+                    <div id="result">
+                        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                            <div class="spinner-border text-primary mb-3" role="status"></div>
+                            <p class="fw-bold">Analyzing your report...</p>
+                            <p class="small text-center">Reading text with Tesseract & generating AI insights. <br> This may take 15-30 seconds.</p>
+                        </div>
+                    </div>
+
+                    <div class="audio-player-container mt-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-volume-up text-muted"></i>
+                        <select id="voiceSelect" class="form-select form-select-sm border-0 bg-transparent" style="font-size: 12px; cursor: pointer;">
+                            <option value="">Detecting Voices...</option>
+                        </select>
+                        <div class="vr mx-2" style="height: 20px;"></div>
+                        <button class="audio-btn-circle bg-success text-white" onclick="playAudio()"><i class="bi bi-play-fill"></i></button>
+                        <button class="audio-btn-circle bg-warning text-white" onclick="pauseAudio()"><i class="bi bi-pause-fill"></i></button>
+                        <button class="audio-btn-circle bg-danger text-white" onclick="stopAudio()"><i class="bi bi-stop-fill"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card card-custom p-4">
+                    <button class="btn btn-primary w-100 rounded-pill py-2 fw-bold mb-4 shadow-sm" onclick="openDietPage()">
+                        <i class="bi bi-calendar-check me-2"></i>View Personalized Diet Plan
+                    </button>
+
+                    <h6 class="fw-bold mb-3 d-flex align-items-center">
+                        <i class="bi bi-robot me-2 text-primary"></i> AI Health Assistant
+                    </h6>
+                    
+                    <div id="chat-box" class="mb-3">
+                        <div class="msg bot-msg">Hello! I'm waiting for your analysis to finish. Once ready, I can explain any specific values to you!</div>
+                    </div>
+
+                    <div class="chat-input-group d-flex align-items-center">
+                        <button id="micBtn" class="btn btn-light rounded-circle mic-btn p-0 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" onclick="toggleMic()">
+                            <i class="bi bi-mic"></i>
+                        </button>
+                        <input id="msg" type="text" class="form-control border-0 bg-transparent ms-2" placeholder="Ask a question..." onkeypress="if(event.key==='Enter') send()">
+                        <button class="btn btn-primary rounded-circle p-0 d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" onclick="send()">
+                            <i class="bi bi-send-fill" style="margin-left: 3px;"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <script type="module">
+    import { auth } from './firebase-configuration.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // Auth Guard
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            window.location.href = 'index.html';
+        }
+    });
+    </script>
+
+    <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get("id");
+    if(id) document.getElementById("display-id").innerText = id;
+
+    // --- CRITICAL FIX START ---
+    // This tells the backend to start OCR/AI processing immediately
+    if(id) {
+        console.log("Triggering OCR for Report ID:", id);
+        fetch(`../api/ocr.php?id=${id}`)
+            .then(() => console.log("OCR Trigger Sent"))
+            .catch(err => console.error("OCR Trigger Failed", err));
+    }
+    // --- CRITICAL FIX END ---
+
+    const historyDiv = document.getElementById("chat-box");
+    const micBtn = document.getElementById("micBtn");
+    const msgInput = document.getElementById("msg");
+    const voiceSelect = document.getElementById("voiceSelect");
+
+    // --- 1. POLLING SYSTEM (The "Waiting" Bridge) ---
+    function fetchAnalysis() {
+        if(!id) return;
+
+        fetch(`../api/history.php?report_id=${id}`)
+            .then(r => r.json())
+            .then(d => {
+                const resultDiv = document.getElementById("result");
+                
+                // If ai_result is present and not an empty string
+                if(d.ai_result && d.ai_result.length > 10) {
+                    resultDiv.innerText = d.ai_result;
+                    // Auto-greet in chat when analysis is done
+                    // Only append if it's the first time seeing the result (optional logic check)
+                    if(document.querySelectorAll('.bot-msg').length === 1) {
+                         appendMessage("Assistant", "Your analysis is ready! How can I help you understand it?", "bot-msg");
+                         speakText("Your analysis is ready.");
+                    }
+                } else {
+                    // Not ready yet? Check again in 3 seconds
+                    setTimeout(fetchAnalysis, 3000);
+                }
+            })
+            .catch(err => {
+                console.error("Polling error:", err);
+                setTimeout(fetchAnalysis, 5000); // Retry after 5s on error
+            });
+    }
+
+    // Start Polling
+    fetchAnalysis();
+
+    // --- 2. GOOGLE TRANSLATE ---
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'hi,mr,bn,ta,te,gu,kn,ml,en',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+    }
+
+    // --- 3. SPEECH SYSTEM ---
+    let voices = [];
+    function loadVoices() {
+        voices = window.speechSynthesis.getVoices();
+        voiceSelect.innerHTML = voices
+            .map((v, i) => `<option value="${i}">${v.name.substring(0,25)} (${v.lang})</option>`)
+            .join('');
+    }
+    if ('speechSynthesis' in window) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
+    }
+
+    function cleanTextForSpeech(text) {
+        if (!text) return "";
+        return text.replace(/[\|\-\=\+\#]{2,}/g, ' ').replace(/[%&\*\+\=\/\>\<]/g, ' ').replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    function speakText(text) {
+        if ('speechSynthesis' in window && text) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.95; 
+            if (voices[voiceSelect.value]) utterance.voice = voices[voiceSelect.value];
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function playAudio() { 
+        const rawText = document.getElementById('result').innerText;
+        speakText(cleanTextForSpeech(rawText)); 
+    }
+    
+    function pauseAudio() { window.speechSynthesis.pause(); }
+    function stopAudio() { window.speechSynthesis.cancel(); }
+
+    // --- 4. CHAT LOGIC ---
+    function send() {
+        const text = msgInput.value.trim();
+        if(!text) return;
+
+        appendMessage("You", text, "user-msg");
+        msgInput.value = "";
+        
+        const typingId = "typing-" + Date.now();
+        const typingDiv = document.createElement("div");
+        typingDiv.id = typingId;
+        typingDiv.className = "msg bot-msg shadow-sm text-muted";
+        typingDiv.innerHTML = "<i>...</i>";
+        historyDiv.appendChild(typingDiv);
+        historyDiv.scrollTop = historyDiv.scrollHeight;
+
+        const formData = new FormData();
+        formData.append('message', text);
+        formData.append('report_id', id);
+
+        fetch("../api/chat.php", { method: "POST", body: formData })
+            .then(r => r.json())
+            .then(d => {
+                document.getElementById(typingId).remove();
+                appendMessage("Assistant", d.reply, "bot-msg");
+                speakText(cleanTextForSpeech(d.reply));
+            })
+            .catch(() => {
+                if(document.getElementById(typingId)) document.getElementById(typingId).remove();
+                appendMessage("Assistant", "Connection error. Try again.", "bot-msg");
+            });
+    }
+
+    function appendMessage(sender, text, className) {
+        const div = document.createElement("div");
+        div.className = `msg ${className} shadow-sm`;
+        div.innerText = text; 
+        historyDiv.appendChild(div);
+        historyDiv.scrollTo({ top: historyDiv.scrollHeight, behavior: 'smooth' });
+    }
+
+    // --- 5. VOICE INPUT ---
+    let recognition;
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.onstart = () => micBtn.classList.add("listening");
+        recognition.onend = () => micBtn.classList.remove("listening");
+        recognition.onresult = (e) => {
+            msgInput.value = e.results[0][0].transcript;
+            setTimeout(send, 500);
+        };
+    }
+
+    function toggleMic() {
+        if (micBtn.classList.contains("listening")) recognition.stop();
+        else recognition.start();
+    }
+
+    function openDietPage() {
+        if(!id) return alert("Please load a report first.");
+        window.location.href = `diet.html?id=${id}`;
+    }
+    </script>
+</body>
+</html>

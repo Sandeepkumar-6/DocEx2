@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthAI | Patient Dashboard</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root { 
+            --bs-primary: #16a085; 
+            --bs-body-bg: #f0fdfa; 
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bs-body-bg);
+            overflow-x: hidden;
+        }
+
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 2000; display: none;
+        }
+
+        /* Layout */
+        .wrapper { display: flex; width: 100%; align-items: stretch; }
+        
+        #sidebar {
+            min-width: var(--sidebar-width);
+            max-width: var(--sidebar-width);
+            background: #fff;
+            min-height: 100vh;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        #content { width: 100%; padding: 20px; }
+
+        .navbar-custom {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            padding: 10px 20px;
+            margin-bottom: 30px;
+        }
+
+        .profile-img {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid var(--bs-primary);
+        }
+
+        .card-custom {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            background: white;
+            height: 100%;
+        }
+
+        .form-control { border-radius: 10px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .form-control:focus { border-color: var(--bs-primary); box-shadow: 0 0 0 0.2rem rgba(22, 160, 133, 0.25); }
+        
+        .btn-primary { 
+            border-radius: 25px; 
+            background: var(--bs-primary); 
+            border: none; 
+            padding: 12px; 
+            font-weight: 600; 
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover { background: #138d75; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+        <h5 class="fw-bold text-dark">Processing Report...</h5>
+        <p class="small text-muted">Securely uploading to HealthAI Server</p>
+    </div>
+
+    <div class="wrapper">
+        <nav id="sidebar" class="p-4 d-none d-md-block">
+            <div class="sidebar-header mb-5">
+                <h4 class="fw-bold text-primary d-flex align-items-center">
+                    <i class="bi bi-heart-pulse-fill me-2"></i> HealthAI
+                </h4>
+            </div>
+            
+            <ul class="list-unstyled components">
+                <li class="mb-3">
+                    <a href="#" class="text-decoration-none fw-bold text-dark d-block p-2 rounded bg-light">
+                        <i class="bi bi-grid-fill me-2 text-primary"></i> Dashboard
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div id="content">
+            <nav class="navbar navbar-custom d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <h5 class="m-0 fw-bold text-dark">Patient Dashboard</h5>
+                </div>
+                
+                <div class="dropdown">
+                    <div class="d-flex align-items-center cursor-pointer" data-bs-toggle="dropdown">
+                        <span class="me-3 fw-medium text-muted d-none d-sm-block" id="nav-username">Loading...</span>
+                        <img src="https://ui-avatars.com/api/?name=User&background=16a085&color=fff" class="profile-img" id="profileMenu">
+                    </div>
+                    
+                    <ul class="dropdown-menu dropdown-menu-end p-3 shadow-lg border-0" style="width: 260px; margin-top: 15px;">
+                        <li class="text-center mb-3">
+                            <h6 class="mb-0 fw-bold" id="drop-username">User</h6>
+                            <small class="text-muted">Registered Patient</small>
+                        </li>
+                        <hr class="dropdown-divider">
+                        <li><p class="small mb-2 text-muted"><i class="bi bi-calendar me-2"></i>Age: <span id="user-age" class="text-dark fw-bold">--</span></p></li>
+                        <li><button class="btn btn-outline-danger btn-sm w-100 mt-2" id="logout-btn"><i class="bi bi-box-arrow-right me-2"></i>Logout</button></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="card card-custom p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                                <i class="bi bi-cloud-upload text-primary fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold m-0">Analyze New Report</h5>
+                                <small class="text-muted">Upload for AI Insight</small>
+                            </div>
+                        </div>
+
+                        <form id="upload-form">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Report Title</label>
+                                <input id="report-name" name="name" type="text" class="form-control" placeholder="e.g., Annual Blood Test 2024" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted">Upload Image (JPG/PNG)</label>
+                                <div class="p-4 border-2 border-dashed rounded text-center bg-light" style="border-style: dashed; border-color: #cbd5e1;">
+                                    <i class="bi bi-image text-muted fs-1 mb-2 d-block"></i>
+                                    <input id="report-file" name="image" type="file" class="form-control" accept="image/*" required>
+                                    <small class="d-block mt-2 text-muted">Max size: 5MB</small>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 shadow-sm" id="submit-btn">
+                                Analyze Now <i class="bi bi-arrow-right ms-2"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="card card-custom p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold m-0">Report History</h5>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Report Name</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                            <span class="ms-2">Loading your records...</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script type="module">
+        import { auth, db } from './firebase-configuration.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        let currentUserId = null;
+        let currentUserAge = "30"; 
+
+        // --- 1. AUTHENTICATION ---
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                currentUserId = user.uid;
+                
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        currentUserAge = data.age || "30"; 
+                        
+                        document.getElementById('nav-username').innerText = data.fullName.split(' ')[0];
+                        document.getElementById('drop-username').innerText = data.fullName;
+                        document.getElementById('user-age').innerText = currentUserAge;
+                        
+                        const avatarUrl = `https://ui-avatars.com/api/?name=${data.fullName}&background=16a085&color=fff`;
+                        document.getElementById('profileMenu').src = avatarUrl;
+                    }
+                } catch (e) {
+                    console.error("Profile load error:", e);
+                }
+                
+                document.getElementById('history-table-body').innerHTML = `
+                    <tr><td colspan="4" class="text-center py-4 text-muted small">No recent reports found.</td></tr>`;
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = 'index.html');
+        });
+
+        // --- 3. UPLOAD LOGIC ---
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Show Spinner
+            const loading = document.getElementById('loading-overlay');
+            loading.style.display = 'flex';
+
+            const formData = new FormData();
+            
+            // Capture inputs safely
+            const fileInput = document.getElementById('report-file');
+            const nameInput = document.getElementById('report-name');
+
+            if (!fileInput.files[0]) {
+                alert("Please select a file.");
+                loading.style.display = 'none';
+                return;
+            }
+
+            formData.append('image', fileInput.files[0]);
+            formData.append('name', nameInput.value);
+            
+            // Inject values required by PHP
+            formData.append('age', currentUserAge);
+            formData.append('gender', 'Other'); 
+
+            try {
+                // IMPORTANT: Path is ../api/upload.php based on your folder structure
+                const response = await fetch('../api/upload.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const text = await response.text();
+                
+                try {
+                    const result = JSON.parse(text);
+                    if (result.success) {
+                        // Redirect immediately to result.html
+                        window.location.href = result.redirect || `result.html?id=${result.report_id}`;
+                    } else {
+                        throw new Error(result.error || "Upload failed");
+                    }
+                } catch (jsonError) {
+                    console.error("Server Error Response:", text);
+                    throw new Error("Server Error: " + text.substring(0, 100));
+                }
+
+            } catch (err) {
+                console.error("Upload Error:", err);
+                alert(err.message);
+                loading.style.display = 'none'; // Hide spinner on error
+            }
+        });
+    </script>
+</body>
+</html>
