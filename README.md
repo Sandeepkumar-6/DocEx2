@@ -2,7 +2,8 @@
 
 > **Democratizing Health Information:** Turn complex medical lab reports into simple, actionable insights using AI.
 
-DocEx is a web application that helps patients understand their medical diagnosis. Users can upload a photo of any lab report (blood test, prescription, etc.), and our AI analyzes the text to provide a summary, identify critical values, and generate a personalized diet plan.
+DocEx is a web application that helps patients understand their medical diagnosis. Users can upload a photo of any lab report (blood test, prescription, etc.), and our AI analyzes the text to provide a summary, identify critical values, and generate a personalized diet plan.along with an personalised Ai chatbot
+
 
 ---
 
@@ -63,18 +64,6 @@ DocEx is a web application that helps patients understand their medical diagnosi
 5.  **Run**
     * Start Apache and MySQL in XAMPP.
     * Open your browser and go to: `http://localhost/DocEx2`
-
----
-
-## 📸 Screenshots
-
-*(You can upload screenshots of your project here later!)*
-
-* **Landing Page**
-* **Analysis Result**
-* **Doctor Dashboard**
-
----
 
 ## 🔮 Future Scope
 
